@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <link href='https://fonts.googleapis.com/css?family=Lato:300,900' rel='stylesheet' type='text/css'>
+
+    <style>
+     body{
+        background-color: whitesmoke;
+     }
+
+    </style>
+</head>
+<body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.6/p5.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.2.8/d3.js"></script>
+    <script>
+
+    function setup() {
+      createCanvas(800, 800);
+      stroke('white')
+      angleMode(DEGREES)
+      background(255, 204, 0);
+     // fill('rgba(255,0,255, 0.25)')
+      noFill()
+    }
+
+    let degrees = 0
+    let radius = 300
+    let start = 0
+    let dragged = []
+
+
+    let windmills = []
+
+    function Windmill (start, stop, circles) {
+      this.start = start
+      this.stop = stop
+      this.circles = circles
+      this.angle = 0
+      this.center = {
+        x: start.x + (stop.x - start.x)/2,
+        y: start.y + (stop.y - start.y)/2
+      }
+      this.midLength = int(dist(start.x, start.y, stop.x, stop.y))/2;
+
+    }
+
+    Windmill.prototype.draw = function (r, vy) { 
+      
+      stroke("white")
+      noFill()
+
+      const x = this.center.x 
+      const y = this.center.y 
+      line(x, y, x + cos(this.angle)*this.midLength, y + sin(this.angle)*this.midLength)
+      line(x, y, x - cos(this.angle)*this.midLength, y - sin(this.angle)*this.midLength)
+      
+
+      // line(x + cos(this.angle)*this.midLength, 
+      //   y + sin(this.angle)*this.midLength, 
+      //   x + cos(this.angle + this.circles[0].angle)*this.circles[0].distance, 
+      //   y + sin(this.angle + this.circles[0].angle)*this.circles[0].distance)
+      // line(x - cos(this.angle)*this.midLength, 
+      //   y - sin(this.angle)*this.midLength, 
+      //   x + cos(this.angle + this.circles[this.circles.length - 1].angle)*this.circles[this.circles.length - 1].distance, 
+      //   y + sin(this.angle + this.circles[this.circles.length - 1].angle)*this.circles[this.circles.length - 1].distance)
+
+      this.circles.forEach((c, i) => {
+        if (i === 0) {
+          line(
+            x - cos(this.angle)*this.midLength, y - sin(this.angle)*this.midLength,
+            x + cos(this.angle + c.angle)*c.distance, 
+            y + sin(this.angle + c.angle)*c.distance 
+          )
+        } else if (i !== 0){
+          const p = this.circles[i - 1]
+          line(x + cos(this.angle + p.angle)*p.distance, 
+            y + sin(this.angle + p.angle)*p.distance, 
+            
+            x + cos(this.angle + c.angle)*c.distance, 
+            y + sin(this.angle + c.angle)*c.distance 
+          )
+        }
+
+        if ( i === this.circles.length - 1){
+          line(
+            x + cos(this.angle + c.angle)*c.distance, 
+            y + sin(this.angle + c.angle)*c.distance, 
+            x + cos(this.angle)*this.midLength, y + sin(this.angle)*this.midLength
+          )
+        }
+      })
+
+      this.circles.forEach(c => {
+        fill(c.fill)
+        noStroke()
+        arc(x + cos(this.angle + c.angle)*c.distance, 
+          y + sin(this.angle + c.angle)*c.distance, c.radius, c.radius, 0, 360)
+
+      })
+     this.angle += .5
+    }
+
+    function draw() {
+      background(255, 204, 0);
+
+      windmills.forEach(w => {
+        w.draw()
+      })
+    }
+    function mousePressed() {
+      dragged = []
+    }
+
+    function mouseDragged(){
+      dragged.push({x : mouseX, y: mouseY })
+    }
+
+    function mouseReleased() {
+      stroke("white")
+      noFill()
+     // endShape()
+      line(dragged[0].x, dragged[0].y, dragged[dragged.length-1].x, dragged[dragged.length-1].y)
+            noStroke()
+
+      const start = dragged[0]
+      const end = dragged[dragged.length -1]
+
+      const over = function({ x, y }) {
+
+        const comparison = { x: start.x, y: start.y }
+        if (x > start.x){
+          const diff = x - start.x
+          comparison.x = x
+          comparison.y = start.y + diff* (end.y - start.y)/(end.x - start.x)
+        } 
+
+        if ( y < comparison.y){
+          return { above: true, diff: Math.abs(y - comparison.y)}
+        }
+        return { above: false, diff: Math.abs(y - comparison.y)}
+      }
+
+      let series = [over(dragged[0])];
+      let direction = over(dragged[1])
+      let circles = []
+
+      const center = {
+        x: start.x + (end.x - start.x)/2,
+        y: start.y + (end.y - start.y)/2
+      }
+    const distanceCenter = dist(center.x, center.y, end.x, end.y)
+
+      dragged.forEach((p, i) => {
+        let direction = over(p)
+
+        if (i === dragged.length - 1){
+          direction = over(dragged[i - 1])
+          direction.above = !direction.above
+        }
+
+        if (direction.above){
+          fill('rgba(255,0,255, 0.25)')
+        } else {
+          fill('rgba(255,255,0, 0.25)')
+        }
+        arc(p.x, p.y, 5, 5, 0, 360)
+        if (i !== 0){
+
+          if (direction.above !== series[series.length - 1 ].above || i === dragged.length - 1){
+            let j = 0
+            let max = 0
+            series.forEach((s, k) => {
+              if (s.diff > max){
+                max = s.diff
+                j = series.length - 1 - k
+              }
+            })
+            let circle = dragged[i - j] 
+            let circleFill = 'rgba(255,0,255, 0.25)'
+
+            const distance = dist(circle.x, circle.y, center.x, center.y)
+            const distanceStart = dist(circle.x, circle.y, start.x, start.y )
+            const distanceEnd = dist(circle.x, circle.y, end.x, end.y)
+
+            console.log('max', max, distance)
+            // let angle = acos() //asin(max/distance)c2 = a2 + b2 - 2ab cos(C)
+            // acos(c^2 - a^2 - b^2 )/-2ab  = Degree
+            
+            let angle = acos((-distanceEnd*distanceEnd + distance*distance + distanceCenter*distanceCenter)/(2*distance*distanceCenter))
+
+            if (direction.above){
+              circleFill = 'rgba(255,255,0, 0.25)'
+            } else {
+              angle = -angle
+
+            }
+
+            fill(circleFill)
+            arc(circle.x, circle.y, max, max, 0, 360)
+            if (radius > 3){
+            circles.push({x: circle.x, 
+              y: circle.y, 
+              radius: max, 
+              fill: circleFill, 
+              distance,
+              angle,
+              above: direction.above})
+            }
+            noFill()
+
+            series = []
+          }
+
+          series.push(direction)
+
+        }
+        
+      })
+
+      const windmill = new Windmill(start, end, circles)
+      windmills.push(windmill)
+      windmill.draw()
+      
+    }
+
+    </script>
+
+</body>
+</html>

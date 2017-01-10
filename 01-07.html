@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <link href='https://fonts.googleapis.com/css?family=Lato:300,900' rel='stylesheet' type='text/css'>
+
+    <style>
+     body{
+        background-color: whitesmoke;
+     }
+
+    </style>
+</head>
+<body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.6/p5.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.2.8/d3.js"></script>
+    <script>
+
+    function setup() {
+      createCanvas(800, 800);
+      stroke('white')
+      angleMode(DEGREES)
+      background(255, 204, 0);
+      noFill()
+      // blendMode(SOFT_LIGHT)
+    }
+
+    let degrees = 0
+    let radius = 300
+    let start = 0
+    let dragged = []
+
+
+    let windmills = []
+
+    function Windmill (start, stop, circles) {
+      this.start = start
+      this.stop = stop
+      this.circles = circles
+      this.angle = 0
+      this.center = {
+        x: start.x + (stop.x - start.x)/2,
+        y: start.y + (stop.y - start.y)/2
+      }
+      this.midLength = int(dist(start.x, start.y, stop.x, stop.y))/2;
+      this.clockwise = (start.x < stop.x)
+    }
+
+    Windmill.prototype.draw = function (r, vy) { 
+      
+      stroke("white")
+      noFill()
+
+      const x = this.center.x 
+      const y = this.center.y 
+
+      this.circles.forEach((c, i) => {
+        strokeWeight(1)
+        stroke('white')
+        
+        let angle = this.angle
+
+
+          const p = i === 0 ? this.circles[this.circles.length -1] : this.circles[i - 1]
+          const pd = (p.above ? -1 : 1)
+          const cd = c.above ? -1 : 1
+
+          line(x + cos(angle*pd + p.angle)*p.distance, 
+            y + sin(angle*pd + p.angle)*p.distance, 
+            
+            x + cos(angle*cd + c.angle)*c.distance, 
+            y + sin(angle*cd + c.angle)*c.distance 
+          )
+
+      })
+
+      this.circles.forEach(c => {
+        let angle = this.angle*(c.above ? -1 : 1)
+        fill(c.fill)
+        noStroke()
+        arc(x + cos(angle + c.angle)*c.distance, 
+          y + sin(angle + c.angle)*c.distance, c.radius, c.radius, 0, 360)
+        
+        strokeWeight(7)
+        stroke(c.fill)
+        noFill()
+
+        let angle1 = c.angle + angle + c.radius*(c.above ? 1 : -1)/2
+        let angle2 = c.angle + angle + c.radius*(c.above ? 1 : -1)
+        arc(this.center.x, this.center.y, c.distance*2, c.distance*2, Math.min(angle1, angle2), Math.max(angle1, angle2))
+
+        // strokeWeight(12)
+        // angle1 = c.angle + angle/2
+        // angle2 = c.angle + angle/2 + c.radius*(c.above ? 1 : -1)
+        // arc(this.center.x, this.center.y, c.distance*2.3, c.distance*2.3, Math.min(angle1, angle2), Math.max(angle1, angle2))
+      })
+     this.angle += 1
+    }
+
+    function draw() {
+      background('rgba(255, 204, 0, 1)');
+
+      windmills.forEach(w => {
+        w.draw()
+      })
+    }
+    function mousePressed() {
+      dragged = []
+    }
+
+    function mouseDragged(){
+      dragged.push({x : mouseX, y: mouseY })
+    }
+
+    function mouseReleased() {
+      stroke("white")
+      noFill()
+     // endShape()
+      line(dragged[0].x, dragged[0].y, dragged[dragged.length-1].x, dragged[dragged.length-1].y)
+            noStroke()
+
+      const start = dragged[0]
+      const end = dragged[dragged.length -1]
+
+      const over = function({ x, y }) {
+
+        const comparison = { x: start.x, y: start.y }
+        if (x > start.x){
+          const diff = x - start.x
+          comparison.x = x
+          comparison.y = start.y + diff* (end.y - start.y)/(end.x - start.x)
+        } 
+
+        if ( y < comparison.y){
+          return { above: true, diff: Math.abs(y - comparison.y)}
+        }
+        return { above: false, diff: Math.abs(y - comparison.y)}
+      }
+
+      let series = [over(dragged[0])];
+      let direction = over(dragged[1])
+      let circles = []
+
+      const center = {
+        x: start.x + (end.x - start.x)/2,
+        y: start.y + (end.y - start.y)/2
+      }
+    const distanceCenter = dist(center.x, center.y, end.x, end.y)
+
+      dragged.forEach((p, i) => {
+        let direction = over(p)
+
+        if (i === dragged.length - 1){
+          direction = over(dragged[i - 1])
+          direction.above = !direction.above
+        }
+
+        if (direction.above){
+          fill('rgba(255,0,255, 1)')
+        } else {
+          fill('rgba(0,255,255, 1)')
+        }
+        arc(p.x, p.y, 5, 5, 0, 360)
+        if (i !== 0){
+
+          if (direction.above !== series[series.length - 1 ].above || i === dragged.length - 1){
+            let j = 0
+            let max = 0
+            series.forEach((s, k) => {
+              if (s.diff > max){
+                max = s.diff
+                j = series.length - 1 - k
+              }
+            })
+            let circle = dragged[i - j] 
+            let circleFill = 'rgba(255,0,255, 0.25)'
+
+            const distance = dist(circle.x, circle.y, center.x, center.y)
+            const distanceStart = dist(circle.x, circle.y, start.x, start.y )
+            const distanceEnd = dist(circle.x, circle.y, end.x, end.y)
+            
+            let angle = acos((-distanceEnd*distanceEnd + distance*distance + distanceCenter*distanceCenter)/(2*distance*distanceCenter))
+
+            if (direction.above){
+              circleFill = 'rgba(255,255,0, 0.25)'
+            } else {
+              angle = -angle
+
+            }
+
+            fill(circleFill)
+            arc(circle.x, circle.y, max, max, 0, 360)
+            if (radius > 3){
+            circles.push({x: circle.x, 
+              y: circle.y, 
+              radius: max, 
+              fill: circleFill, 
+              distance,
+              angle,
+              above: direction.above})
+            }
+            noFill()
+
+            series = []
+          }
+
+          series.push(direction)
+
+        }
+        
+      })
+
+      const windmill = new Windmill(start, end, circles)
+      windmills.push(windmill)
+      windmill.draw()
+      
+    }
+
+    </script>
+
+</body>
+</html>

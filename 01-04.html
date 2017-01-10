@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <link href='https://fonts.googleapis.com/css?family=Lato:300,900' rel='stylesheet' type='text/css'>
+
+    <style>
+     body{
+        background-color: whitesmoke;
+     }
+
+    </style>
+</head>
+<body>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.6/p5.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.2.8/d3.js"></script>
+    <script>
+
+    function setup() {
+      createCanvas(800, 800);
+      stroke('white')
+      angleMode(DEGREES)
+      background(255, 204, 0);
+     // fill('rgba(255,0,255, 0.25)')
+      noFill()
+    }
+
+    let degrees = 0
+    let radius = 300
+    let start = 0
+    let dragged = []
+
+
+    function draw() {
+//     background(255, 204, 0)
+
+
+
+      // arc(width/2, height/2, 50, 50, start, degrees )
+      // arc(width/2, height/2, 100, 100, start, degrees )
+      // arc(width/2, height/2, 150, 150, start, degrees )
+      // arc(width/2, height/2, 200, 200, start, degrees )
+      // arc(width/2, height/2, 250, 250, start, degrees )
+      
+      // const x = width/2 + cos(degrees)*radius
+      // const y = height/2 + sin(degrees)*radius
+      // stroke('rgba(255,0,255, 0.25)')
+      // line(width/2, height/2, x, y)
+      // noStroke()
+
+      // arc(width/2 + cos(degrees)*radius/2, height/2 + sin(degrees)*radius/2, 100, 100, 0 + degrees, 60 + degrees)
+      // arc(width/2 + cos(degrees)*radius/2, height/2 + sin(degrees)*radius/2, 150, 150, 120, 180)
+      // arc(width/2 + cos(degrees)*radius/2, height/2 + sin(degrees)*radius/2, 250, 250, 300, 360)
+
+      // arc(x, y, 50, 50, degrees, start)
+          
+      // degrees++
+      // if (degrees > 180){
+      //   start++
+      // }
+    //  console.log("dragged", dragged)
+    }
+    function mousePressed() {
+      dragged = []
+      beginShape()
+    }
+
+    function mouseDragged(){
+      dragged.push({x : mouseX, y: mouseY })
+      vertex(mouseX, mouseY)
+
+    }
+
+    function mouseReleased() {
+      console.log('released', dragged)
+      stroke("white")
+      noFill()
+      endShape()
+      line(dragged[0].x, dragged[0].y, dragged[dragged.length-1].x, dragged[dragged.length-1].y)
+            noStroke()
+
+      const start = dragged[0]
+      const end = dragged[dragged.length -1]
+
+      const over = function({ x, y }) {
+
+        const comparison = { x: start.x, y: start.y }
+        if (x > start.x){
+          const diff = x - start.x
+          comparison.x = x
+          comparison.y = start.y + diff* (end.y - start.y)/(end.x - start.x)
+        } 
+
+        if ( y < comparison.y){
+          return { above: true, diff: Math.abs(y - comparison.y)}
+        }
+        return { above: false, diff: Math.abs(y - comparison.y)}
+      }
+
+      let series = [over(dragged[0])];
+      let direction = over(dragged[1])
+      dragged.forEach((p, i) => {
+        const direction = over(p)
+        if (direction.above){
+          fill('rgba(255,0,255, 0.25)')
+        } else {
+          fill('rgba(255,255,0, 0.25)')
+        }
+        arc(p.x, p.y, 5, 5, 0, 360)
+
+        if (i !== 0){
+
+          if (direction.above !== series[series.length - 1 ].above){
+            const max = d3.max(series, d => d.diff)
+            console.log("max", max)
+            if (!direction.above){
+            fill('rgba(255,0,255, 0.25)')
+            } else {
+            fill('rgba(255,255,0, 0.25)')
+            }
+            arc(p.x, p.y, max, max, 0, 360)
+
+            noFill()
+            series = []
+          }
+
+          series.push(direction)
+
+        }
+        
+      })
+
+    }
+
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <link href='https://fonts.googleapis.com/css?family=Lato:300,900' rel='stylesheet' type='text/css'>
+
+    <style>
+     body{
+        background-color: whitesmoke;
+     }
+
+    </style>
+</head>
+<body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.6/p5.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.2.8/d3.js"></script>
+    <script>
+
+
+    let yHorizon = (.1 + Math.random()*.2)*600
+    let xHorizon = Math.random()*600
+
+    function setup() {
+      createCanvas(600, 600);
+      angleMode(DEGREES)
+
+    }
+
+    var j = 0
+    function draw() {
+      if (j%60 === 0){
+        yHorizon = (.1 + Math.random()*.2)*600
+        xHorizon = Math.random()*600
+        background("#77c0ca")
+        fill("#f35555")
+        stroke("#f35555")
+
+
+        line(0, yHorizon, 600, yHorizon)
+        arc(xHorizon, yHorizon, 10, 10, 0, 360)
+
+        stroke("#fbd3de")
+        for(var i = 0; i < 40; i ++){
+          plotLand()
+        }
+      }
+      j++
+    }
+
+    function plotLand() {
+      const start = {
+        y: random(yHorizon, 600),
+        x: random(0, 600)
+      }
+
+      const topWidth = random(30, 120)
+      const bottomWidth = random (topWidth, topWidth + 50)
+      const startAngle = atan( (yHorizon - start.y)/(start.x - xHorizon))
+      const height = random(20, 50)
+     // const topRightAngle 
+
+      // arc(start.x, start.y, 5, 5, 0, 360)
+      // arc(start.x + topWidth, start.y, 5, 5, 0, 360)
+      // line(start.x, start.y, start.x + topWidth, start.y)
+      const rightAngle = atan( (yHorizon - start.y)/(start.x + topWidth - xHorizon))
+      // console.log('start angle', startAngle, rightAngle)
+     // quad(start.x, start.y, start.x + topWidth, start.y, )
+     
+     const side = -1
+    //  console.log('side', side)
+    //  arc(start.x + side*(height)/tan(startAngle), start.y + height, 5, 5, 0, 360 )
+    //  line(start.x, start.y, start.x + side*(height)/tan(startAngle), start.y + height)
+
+     const rightSide = -1
+    //  arc( start.x + topWidth + rightSide*(height)/tan(rightAngle), start.y + height, 5, 5, 0, 360)
+    // arc(start.x + side*( start.y + height - yHorizon)/tan(startAngle) + , start.y + height, )
+
+      quad(start.x, start.y, 
+      start.x + topWidth, start.y, 
+      start.x + topWidth + rightSide*(height)/tan(rightAngle), start.y + height,
+      start.x + side*(height)/tan(startAngle), start.y + height, 5, 5, 0, 360
+      )
+    }
+
+    
+    </script>
+
+</body>
+</html>
