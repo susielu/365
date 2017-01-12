@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <link href='https://fonts.googleapis.com/css?family=Lato:300,900' rel='stylesheet' type='text/css'>
+
+    <style>
+     body{
+        background-color: whitesmoke;
+     }
+
+    </style>
+</head>
+<body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.6/p5.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.2.8/d3.js"></script>
+    <script>
+
+
+    let yHorizon = (.1 + Math.random()*.2)*600
+    let xHorizon = Math.random()*600
+
+    function setup() {
+      createCanvas(600, 600);
+      plotPlains()
+    }
+
+    var j = 0
+    function draw() {
+      if (j%60 === 0){
+      plotPlains()
+      }
+      j++
+    }
+
+    function gridRound(value){
+      let v = Math.round(value)
+      return v - v%30
+    }
+    function plotPlains(){
+        yHorizon = gridRound(random(100, 200))
+        xHorizon = gridRound(random(200, 500))
+        background(`rgba(187, 107, 74, 1)`)
+        fill("#f35555")
+        stroke("white")
+
+        // line(0, yHorizon, 600, yHorizon)
+        // arc(xHorizon, yHorizon, 10, 10, 0, 360)
+
+        noStroke()
+        for(var i = 0; i < 300; i ++){
+          plotLand()
+        }
+    }
+
+    const alpha = ".7"
+    const colors = [`rgba(75, 38, 31, ${alpha})`, 
+      `rgba(93, 82, 84, ${alpha})`, 
+      `rgba(187, 107, 74, ${alpha})`, 
+      `rgba(187, 107, 74, ${alpha})`, 
+      `rgba(187, 107, 74, ${alpha})`, 
+      `rgba(118, 102, 32, ${alpha})`, 
+      `rgba(118, 102, 32, ${alpha})`, 
+      `rgba(118, 102, 32, ${alpha})`, 
+      `rgba(175, 184, 167, ${alpha})`
+      ]
+
+    const colorsTop = [
+      `rgba(95, 139, 168, ${alpha})`,
+      `rgba(95, 139, 168, ${alpha})`,
+      `rgba(95, 139, 168, ${alpha})`,
+      `rgba(95, 139, 168, ${alpha})`,
+      `rgba(198, 138, 36, ${alpha})`,
+      `rgba(226, 102, 56, ${alpha})`
+
+    ]
+
+    function plotLand() {
+      const start = {
+        y: gridRound(random(-50, 600)),
+        x: gridRound(random(0, 600))
+      }
+
+
+      const topWidth = gridRound(random(30, 220))
+      const bottomWidth = gridRound(random (topWidth, topWidth + 100))
+      const startAngle = atan( (yHorizon - start.y)/(start.x - xHorizon))
+      const height = gridRound(random(20, 250))
+      const rightAngle = atan( (yHorizon - start.y)/(start.x + topWidth - xHorizon))
+    
+
+      // if (start.y < yHorizon && start.y + height < yHorizon){
+      //   fill(colorsTop[Math.round(random(0, colorsTop.length -1))])
+      // } else {
+        fill(colors[Math.round(random(0, colors.length -1))].replace(alpha, Math.min(1, Math.abs(Math.min(start.y - yHorizon, start.y + height - yHorizon)/200)) )) 
+      // }
+
+      quad(start.x, start.y, 
+      start.x + topWidth, start.y, 
+      start.x + topWidth - (height)/tan(rightAngle), start.y + height,
+      start.x - (height)/tan(startAngle), start.y + height, 5, 5, 0, 360
+      )
+    }
+
+    
+    </script>
+
+</body>
+</html>
