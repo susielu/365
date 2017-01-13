@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <link href='https://fonts.googleapis.com/css?family=Lato:300,900' rel='stylesheet' type='text/css'>
+
+    <style>
+     body{
+        background-color: whitesmoke;
+     }
+
+    </style>
+</head>
+<body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.6/p5.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.2.8/d3.js"></script>
+    <script>
+
+
+    let yHorizon = (.1 + Math.random()*.2)*600
+    let xHorizon = Math.random()*600
+
+    function setup() {
+      createCanvas(1200, 600);
+      plotPlains()
+      angleMode(DEGREES)
+    }
+
+    var j = 0
+    function draw() {
+      if (j%60 === 0){
+      plotPlains()
+      }
+      j++
+    }
+
+    function gridRound(value){
+      let v = Math.round(value)
+      return v - v%1
+    }
+    function plotPlains(){
+        yHorizon = gridRound(random(350, 350))
+        xHorizon = gridRound(random(200, 1000))
+        background(`rgba(187, 107, 74, 1)`)
+        stroke(`rgba(255,255,255, .2)`)
+
+        line(0, yHorizon, 1200, yHorizon)
+
+        stroke(`rgba(187, 107, 74, 1)`)
+
+
+        for(var i = 0; i < random(50, 300); i ++){
+          const top = plotLand()
+          const bottom = plotTop(top.x, top.y - .02*(top.y - yHorizon)*randomGaussian(50, 25), top.fill, top.topWidth, top.rectangle)
+          quad(top.rectangle[0][0], top.rectangle[0][1],
+          top.rectangle[3][0], top.rectangle[3][1],
+          bottom.rectangle[3][0], bottom.rectangle[3][1],
+          bottom.rectangle[0][0], bottom.rectangle[0][1]
+          )
+
+          quad(top.rectangle[1][0], top.rectangle[1][1],
+          top.rectangle[2][0], top.rectangle[2][1],
+          bottom.rectangle[2][0], bottom.rectangle[2][1],
+          bottom.rectangle[1][0], bottom.rectangle[1][1]
+          )
+
+          quad(top.rectangle[3][0], top.rectangle[3][1],
+          top.rectangle[2][0], top.rectangle[2][1],
+          bottom.rectangle[2][0], bottom.rectangle[2][1],
+          bottom.rectangle[3][0], bottom.rectangle[3][1]
+          )
+          
+        }
+    }
+
+    function plotTop(x, y, color, topWidth, pRect ) {
+      const start = {
+        y: y,
+        x: x
+      }
+
+      const startAngle = atan( (yHorizon - start.y)/(start.x - xHorizon))
+      const rightAngle = atan( (yHorizon - start.y)/(start.x + topWidth - xHorizon))
+      const height = tan(startAngle)*(start.x - pRect[3][0])
+    
+      const f = 'rgba(0, 255, 255, alpha)'.replace('alpha', Math.min(.5, Math.abs(Math.min(start.y - yHorizon, start.y + height - yHorizon)/200)) )
+
+      fill(f) 
+
+      const rectangle = [
+        [ start.x, start.y ],
+        [ start.x + topWidth, start.y ],
+        [ pRect[2][0], start.y + height ],
+        [ pRect[3][0], start.y + height ]
+      ]
+      quad(...rectangle[0], 
+      ...rectangle[1], 
+      ...rectangle[2],
+      ...rectangle[3]
+      )
+      return {x: start.x, y: start.y, fill: f, topWidth, height, rectangle}
+    }
+
+
+    function plotLand(x, y, color, tw, h) {
+      const start = {
+        y: y || gridRound(randomGaussian(yHorizon + 100, 50)),
+        x: x || gridRound(random(0, 1200))
+      }
+
+      const topWidth = tw || gridRound(Math.max(5, Math.abs(randomGaussian(40, 20)*.01*(start.y - yHorizon))))
+      const startAngle = atan( (yHorizon - start.y)/(start.x - xHorizon))
+      const height = h || .01*(start.y - yHorizon)*random(5, 20)
+      const rightAngle = atan( (yHorizon - start.y)/(start.x + topWidth - xHorizon))
+    
+      const f = 'rgba(255, 255, 255, 0)'.replace(0, Math.min(.7, Math.abs(Math.min(start.y - yHorizon, start.y + height - yHorizon)/200)) )
+
+      const rectangle = [
+        [ start.x, start.y ],
+        [ start.x + topWidth, start.y ],
+        [ start.x + topWidth - (height)/tan(rightAngle), start.y + height ],
+        [ start.x - (height)/tan(startAngle), start.y + height ]
+      ]
+      quad(...rectangle[0], 
+      ...rectangle[1], 
+      ...rectangle[2],
+      ...rectangle[3]
+      )
+      return {x: start.x, y: start.y, fill: f, topWidth, height, rectangle}
+    }
+
+    
+    </script>
+
+</body>
+</html>
