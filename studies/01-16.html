@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <link href='https://fonts.googleapis.com/css?family=Lato:300,900' rel='stylesheet' type='text/css'>
+
+    <style>
+     body{
+        background-color: #ccc;
+     }
+
+    </style>
+</head>
+<body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.6/p5.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.2.8/d3.js"></script>
+    <script>
+
+    //Taken from https://github.com/substack/point-in-polygon
+    const insidePolygon = function (point, vs) {
+        // ray-casting algorithm based on
+        // http://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
+        
+        var x = point[0], y = point[1];
+        
+        var inside = false;
+        for (var i = 0, j = vs.length - 1; i < vs.length; j = i++) {
+            var xi = vs[i][0], yi = vs[i][1];
+            var xj = vs[j][0], yj = vs[j][1];
+            
+            var intersect = ((yi > y) != (yj > y))
+                && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+            if (intersect) inside = !inside;
+        }
+        
+        return inside;
+    };
+
+    let polygons = []
+    function setup() {
+      console.log("in setup")
+      createCanvas(800, 800);
+      angleMode(DEGREES)
+      //background('whitesmoke')
+      strokeCap(ROUND);
+      strokeJoin(ROUND);
+      for(let i = 0; i < random(30, 100); i++){
+        console.log("addin polygons")
+        polygons.push(new Polygon(random(50, 600), random(50, 600), randomGaussian(120, 50), randomGaussian(150, 100)))
+      }
+    }
+
+    function drawLine({x1, y1, x2, y2, angle, currentX, currentY, thickness}) {
+
+      let a = angle 
+      if (!angle){
+        if (y1 == y2){
+          a = x1 < x2 ? 0 : 180
+        } else if (x1 == x2){
+          a = y1 < y2 ? 90 : 270
+        } else if (atan((y2 - y1)/(x2 - x1)) !== undefined ){
+          a = atan((y2 - y1)/(x2 - x1))
+          if (x2 < x1){
+            a = a + 180
+          }
+        }  
+      }
+
+      let dx = cos(a)
+      let dy = sin(a)
+      let newX = (currentX || x1) + dx
+      let newY = (currentY || y1) + dy
+      if (dist(newX, newY, x2, y2) < 2){
+        return { done: true }
+      }
+
+      strokeWeight(thickness || 1)
+      line(x1, y1, newX, newY)
+
+      return {
+        x1, y1, x2, y2,
+        currentX: newX,
+        currentY: newY,
+        angle: a,
+        thickness
+      }
+    }
+
+    class Polygon {
+      constructor(x, y, width=120, height=120) {
+        this.points = [
+          [x, y],
+          [x + randomGaussian(width, 10), y + randomGaussian(20, 40)],
+          [x + randomGaussian(width, 10), y + randomGaussian(height, 10)],
+          [x , y + randomGaussian(height, 10)]
+        ]
+        this.x = x + 3
+        this.y = y + 3
+        this.n = 0
+        this.angle = 5
+        this.animations = []
+
+        const xs = []
+        const ys = []
+        this.coloring = this.points.map((p,i) => {
+          let x = p[0]
+          let y = p[1]
+          if (i === 0 || i === 3){
+            x -= randomGaussian(10, 5)
+          } else {
+            x += randomGaussian(10, 5)
+          }
+
+          if (i < 2){
+            y -= randomGaussian(10, 5)
+          } else {
+            y += randomGaussian(10, 5)
+          }
+          xs.push(x)
+          ys.push(y)
+          return [x,y]
+        })
+        this.maxX = Math.max(...xs)
+        this.maxY = Math.max(...ys)
+
+        noFill()
+        stroke("#fff")
+
+        let thickness = 2//randomGaussian(5, 3)
+        this.animations = [
+        { x1: this.points[0][0], y1: this.points[0][1], x2: this.points[1][0], y2: this.points[1][1]},
+        { x1: this.points[1][0], y1: this.points[1][1], x2: this.points[2][0], y2: this.points[2][1]},
+        { x1: this.points[2][0], y1: this.points[2][1], x2: this.points[3][0], y2: this.points[3][1]},
+        { x1: this.points[3][0], y1: this.points[3][1], x2: this.points[0][0], y2: this.points[0][1]}]
+        .map(d => {d.thickness = thickness; return d})
+
+      }
+
+      draw() {
+
+        if(this.animations.length !== 0){
+          const newPoint = drawLine(this.animations[0])
+
+          if (newPoint.done){
+            this.animations.shift()
+          } else {
+            this.animations[0] = newPoint
+          }
+        }
+      }
+    }
+
+    function draw() {
+      polygons.forEach(p => p.draw())
+
+    }
+    
+    </script>
+
+</body>
+</html>
