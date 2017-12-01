@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <link href='https://fonts.googleapis.com/css?family=Lato:300,900' rel='stylesheet' type='text/css'>
+
+  <style>
+    body {
+      background-color: #cedede;
+    }
+  </style>
+</head>
+
+<body>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.6/p5.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.2.8/d3.js"></script>
+  <script>
+
+
+
+
+
+    function drawPolygon(x, y, scalar, ticks = 9) {
+      beginShape()
+      vertex(x, y)
+      let minX = x, minY = y, maxX = x, maxY = y, anchorTop, anchorBottom
+      const sides = [
+        // down
+        {
+          x: [-0.3, 0.3],
+          y: [0.1, 1],
+        },
+        // right
+        {
+          x: [0.1, 0.7],
+          y: [-0.2, 0.2],
+        },
+        {
+          x: [0.1, 0.7],
+          y: [0, 0],
+        },
+        // up
+        {
+          x: [-0.2, 0.4],
+          y: [-0.5, -1],
+          anchor: true
+        },
+        // left
+        {
+          x: [-0.9, -0.2],
+          y: [-0.2, 0.4],
+        }
+      ]
+
+      let lastX = x, lastY = y
+
+      for (const side of sides) {
+        for (let i = 0; i < ticks; i++) {
+          const nextX = lastX + random(...side.x.map(d => d * scalar))
+          const nextY = lastY + random(...side.y.map(d => d * scalar))
+          vertex(nextX, nextY)
+          if (nextX < minX) minX = nextX
+          if (nextX > maxX) maxX = nextX
+          if (nextY < minY) minY = nextY
+          if (nextY > maxY) maxY = nextY
+
+          if (side.anchor) {
+            if (i === (ticks - 4)) {
+              anchorBottom = { x: nextX, y: nextY }
+            }
+
+            if (i === (ticks - 6)) {
+              anchorTop = { x: nextX, y: nextY }
+            }
+          }
+          lastX = nextX
+          lastY = nextY
+
+        }
+      }
+
+      vertex(x, y)
+
+      endShape()
+
+      return { minX, minY, maxX, maxY, anchorTop, anchorBottom }
+    }
+
+    function setup() {
+      createCanvas(windowWidth, windowHeight);
+      stroke('white')
+      angleMode(DEGREES)
+      fill("#ff7d56")
+      let bounds = drawPolygon(200, 200, 100)
+
+      fill("#262626")
+      noStroke()
+      const diameter = 100
+      const center = { x: random(bounds.minX + diameter, bounds.maxY - diameter), y: random(bounds.minY + diameter, bounds.maxY - diameter) }
+      arc(center.x, center.y, diameter, diameter, 0, 360)
+
+      fill("#90febf")
+      stroke("262626")
+
+      bezier(center.x + diameter / 2 / Math.sqrt(2), center.y + diameter / 2 / Math.sqrt(2),
+        center.x + diameter / 2 / Math.sqrt(2), (center.y + diameter / 2 / Math.sqrt(2)) * 1,
+        bounds.anchorTop.x, (bounds.anchorTop.y) / 1.5,
+        bounds.anchorTop.x, bounds.anchorTop.y)
+
+      bezier(center.x + diameter / 2, center.y,
+        center.x + diameter / 2, (center.y) * 1,
+        bounds.anchorBottom.x, (bounds.anchorBottom.y) / 1.5,
+        bounds.anchorBottom.x, bounds.anchorBottom.y)
+    }
+
+    function draw() {
+    }
+
+  </script>
+
+</body>
+
+</html>
